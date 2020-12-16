@@ -7,6 +7,14 @@ AlaudaPipeline {
         scm: [
             credentials: 'acp-acp-gitlab'
         ],
+        chart: [
+            [
+                chart: "topolvm",
+                project: "acp",
+                pipeline: "chart-topolvm",
+                component: "topolvm",
+            ]
+        ],
         docker: [
             repository: "acp/topolvm",
             credentials: "alaudak8s",
