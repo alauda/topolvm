@@ -16,7 +16,7 @@ KUBEBUILDER_ASSETS := $(BINDIR)
 PROTOC := PATH=$(BINDIR):$(PATH) $(BINDIR)/protoc -I=$(PWD)/include:.
 PACKAGES := unzip lvm2 xfsprogs
 
-GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
+#GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 GO111MODULE = on
@@ -88,7 +88,7 @@ check-uncommitted:
 .PHONY: build
 build: build/hypertopolvm build/lvmd csi-sidecars
 
-build/hypertopolvm: $(GO_FILES)
+build/hypertopolvm:
 	mkdir -p build
 	go build -o $@ -ldflags "-X github.com/topolvm/topolvm.Version=$(TOPOLVM_VERSION)" ./pkg/hypertopolvm
 
