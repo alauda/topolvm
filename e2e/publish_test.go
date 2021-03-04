@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/container-storage-interface/spec/lib/go/csi"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	topolvmv1 "github.com/topolvm/topolvm/api/v1"
+	"github.com/topolvm/topolvm/csi"
 	"google.golang.org/grpc"
 	"sigs.k8s.io/yaml"
 )
@@ -126,7 +126,7 @@ spec:
 		By("creating Filesystem volume")
 		mountVolCap := &csi.VolumeCapability{
 			AccessType: &csi.VolumeCapability_Mount{
-				Mount: &csi.VolumeCapability_MountVolume{FsType: "btrfs"},
+				Mount: &csi.VolumeCapability_MountVolume{FsType: "xfs"},
 			},
 			AccessMode: &csi.VolumeCapability_AccessMode{
 				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,

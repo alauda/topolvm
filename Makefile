@@ -1,10 +1,10 @@
 ## Dependency versions
 
-CSI_VERSION=1.1.0
-K8S_VERSION=1.18.9
+CONTROLLER_TOOLS_VERSION=0.5.0
+CSI_VERSION=1.3.0
 KUBEBUILDER_VERSION = 2.3.1
-KIND_VERSION=0.9.0
-PROTOC_VERSION=3.12.4
+KUSTOMIZE_VERSION= 3.8.9
+PROTOC_VERSION=3.15.0
 
 ## DON'T EDIT BELOW THIS LINE
 
@@ -12,6 +12,10 @@ SUDO=sudo
 CURL=curl -Lsf
 BINDIR := $(PWD)/bin
 CONTROLLER_GEN := $(BINDIR)/controller-gen
+KUSTOMIZE := $(BINDIR)/kustomize
+STATICCHECK := $(BINDIR)/staticcheck
+NILERR := $(BINDIR)/nilerr
+INEFFASSIGN := $(BINDIR)/ineffassign
 KUBEBUILDER_ASSETS := $(BINDIR)
 PROTOC := PATH=$(BINDIR):$(PATH) $(BINDIR)/protoc -I=$(PWD)/include:.
 PACKAGES := unzip lvm2 xfsprogs
@@ -20,7 +24,7 @@ PACKAGES := unzip lvm2 xfsprogs
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 GO111MODULE = on
-GOFLAGS = -mod=vendor
+GOFLAGS =
 export GO111MODULE GOFLAGS KUBEBUILDER_ASSETS
 
 BUILD_TARGET=hypertopolvm
@@ -55,9 +59,9 @@ PROTOBUF_GEN = csi/csi.pb.go csi/csi_grpc.pb.go \
 .PHONY: test
 test:
 	test -z "$$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
-	staticcheck ./...
-	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
-	ineffassign .
+	$(STATICCHECK) ./...
+	test -z "$$($(NILERR) ./... 2>&1 | tee /dev/stderr)"
+	$(INEFFASSIGN) .
 	go install ./...
 	go test -race -v ./...
 	go vet ./...
@@ -67,7 +71,7 @@ test:
 .PHONY: manifests
 manifests:
 	$(CONTROLLER_GEN) \
-		crd:trivialVersions=true \
+		crd:crdVersions=v1 \
 		rbac:roleName=topolvm-controller \
 		webhook \
 		paths="./api/...;./controllers;./hook;./driver/k8s" \
@@ -104,14 +108,17 @@ csi-sidecars:
 .PHONY: image
 image:
 	docker build -t $(IMAGE_PREFIX)topolvm:devel --build-arg TOPOLVM_VERSION=$(TOPOLVM_VERSION) .
+	docker build -t $(IMAGE_PREFIX)topolvm-with-sidecar:devel --build-arg TOPOLVM_VERSION=$(TOPOLVM_VERSION) -f Dockerfile.with-sidecar .
 
 .PHONY: tag
 tag:
 	docker tag $(IMAGE_PREFIX)topolvm:devel $(IMAGE_PREFIX)topolvm:$(IMAGE_TAG)
+	docker tag $(IMAGE_PREFIX)topolvm-with-sidecar:devel $(IMAGE_PREFIX)topolvm-with-sidecar:$(IMAGE_TAG)
 
 .PHONY: push
 push:
 	docker push $(IMAGE_PREFIX)topolvm:$(IMAGE_TAG)
+	docker push $(IMAGE_PREFIX)topolvm-with-sidecar:$(IMAGE_TAG)
 
 .PHONY: clean
 clean:
@@ -121,26 +128,21 @@ clean:
 
 .PHONY: tools
 tools:
-	cd /tmp; env GOFLAGS= GO111MODULE=on go get golang.org/x/tools/cmd/goimports	
-	cd /tmp; env GOFLAGS= GO111MODULE=on go get honnef.co/go/tools/cmd/staticcheck
-	cd /tmp; env GOFLAGS= GO111MODULE=on go get github.com/gordonklaus/ineffassign
-	cd /tmp; env GOFLAGS= GO111MODULE=on go get github.com/gostaticanalysis/nilerr/cmd/nilerr
+	$(call go-get-tool,$(BINDIR)/goimports,golang.org/x/tools/cmd/goimports)
+	$(call go-get-tool,$(BINDIR)/staticcheck,honnef.co/go/tools/cmd/staticcheck)
+	$(call go-get-tool,$(BINDIR)/ineffassign,github.com/gordonklaus/ineffassign)
+	$(call go-get-tool,$(BINDIR)/nilerr,github.com/gostaticanalysis/nilerr/cmd/nilerr)
 
 .PHONY: setup
 setup: tools
 	$(SUDO) apt-get update
 	$(SUDO) apt-get -y install --no-install-recommends $(PACKAGES)
-	if apt-cache show btrfs-progs; then \
-		$(SUDO) apt-get install -y btrfs-progs; \
-	else \
-		$(SUDO) apt-get install -y btrfs-tools; \
-	fi
 
 	mkdir -p bin
 	curl -sfL https://go.kubebuilder.io/dl/$(KUBEBUILDER_VERSION)/$(GOOS)/$(GOARCH) | tar -xz -C /tmp/
 	mv /tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOOS)_$(GOARCH)/bin/* bin/
 	rm -rf /tmp/kubebuilder_*
-	GOBIN=$(BINDIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 	curl -sfL -o protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v$(PROTOC_VERSION)/protoc-$(PROTOC_VERSION)-linux-x86_64.zip
 	unzip -o protoc.zip bin/protoc 'include/*'
@@ -149,8 +151,20 @@ setup: tools
 	GOBIN=$(BINDIR) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	GOBIN=$(BINDIR) go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
 
-	curl -o $(BINDIR)/kind -sfL https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-linux-amd64
-	curl -o $(BINDIR)/kubectl -sfL https://storage.googleapis.com/kubernetes-release/release/v$(K8S_VERSION)/bin/linux/amd64/kubectl
-	curl -sfL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv3.7.0/kustomize_v3.7.0_linux_amd64.tar.gz | tar -xz -C $(BINDIR)
-	chmod a+x $(BINDIR)/kubectl $(BINDIR)/kind
 	GOBIN=$(BINDIR) go install github.com/onsi/ginkgo/ginkgo
+
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v$(KUSTOMIZE_VERSION))
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef

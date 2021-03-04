@@ -26,11 +26,14 @@ func hasTopoLVMFinalizer(pvc *corev1.PersistentVolumeClaim) bool {
 }
 
 func testHook() {
+	var cc CleanupContext
 	BeforeEach(func() {
 		createNamespace(nsHookTest)
+		cc = commonBeforeEach()
 	})
 	AfterEach(func() {
 		kubectl("delete", "namespaces/"+nsHookTest)
+		commonAfterEach(cc)
 	})
 
 	It("should test hooks", func() {
@@ -97,7 +100,7 @@ metadata:
 spec:
   containers:
     - name: ubuntu
-      image: quay.io/cybozu/ubuntu:18.04
+      image: quay.io/cybozu/ubuntu:20.04
       command: ["/usr/local/bin/pause"]
       volumeMounts:
         - mountPath: /test1
@@ -112,6 +115,21 @@ spec:
       persistentVolumeClaim:
         claimName: local-pvc2
 `
+		const minVerDryRun int64 = 18
+		kubernetesVersionStr := os.Getenv("TEST_KUBERNETES_VERSION")
+		kubernetesVersion := strings.Split(kubernetesVersionStr, ".")
+		Expect(len(kubernetesVersion)).To(Equal(2))
+		kubernetesMinorVersion, err := strconv.ParseInt(kubernetesVersion[1], 10, 64)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		if kubernetesMinorVersion < minVerDryRun {
+			stdout, stderr, err := kubectlWithInput([]byte(yml), "-n", nsHookTest, "apply", "-f", "-", "--server-dry-run")
+			Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+		} else {
+			stdout, stderr, err := kubectlWithInput([]byte(yml), "-n", nsHookTest, "apply", "-f", "-", "--dry-run=server")
+			Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+		}
+
 		stdout, stderr, err := kubectlWithInput([]byte(yml), "-n", nsHookTest, "apply", "-f", "-")
 		Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
 
@@ -163,20 +181,6 @@ spec:
 		}
 	})
 	It("should test hooks for inline ephemeral volumes", func() {
-		const minInlineEphemeralVer int64 = 16
-		kubernetesVersionStr := os.Getenv("TEST_KUBERNETES_VERSION")
-		kubernetesVersion := strings.Split(kubernetesVersionStr, ".")
-		Expect(len(kubernetesVersion)).To(Equal(2))
-		kubernetesMinorVersion, err := strconv.ParseInt(kubernetesVersion[1], 10, 64)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		if kubernetesMinorVersion < minInlineEphemeralVer {
-			Skip(fmt.Sprintf(
-				"inline ephemeral volumes not supported on Kubernetes version: %s. Min supported version is 1.%d",
-				kubernetesVersionStr,
-				minInlineEphemeralVer,
-			))
-		}
 		By("waiting controller pod become ready")
 		Eventually(func() error {
 			result, stderr, err := kubectl("get", "-n=topolvm-system", "pods", "--selector=app.kubernetes.io/name=controller", "-o=json")
@@ -228,7 +232,7 @@ metadata:
 spec:
   containers:
     - name: ubuntu
-      image: quay.io/cybozu/ubuntu:18.04
+      image: quay.io/cybozu/ubuntu:20.04
       command: ["/usr/local/bin/pause"]
       volumeMounts:
         - mountPath: /test1

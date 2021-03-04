@@ -1,49 +1,50 @@
+# parameters
+TEST_KUBERNETES_TARGET ?= current
+TEST_SCHEDULER_MANIFEST ?= daemonset
+
+## Dependency versions
+KIND_VERSION=0.10.0
+
+BINDIR=$(PWD)/bin
 SUDO=sudo
-GOFLAGS=-mod=vendor
-export GOFLAGS
 KIND_CLUSTER_NAME=topolvm-e2e
-KIND := ../bin/kind
-KUBECTL := ../bin/kubectl
+KIND := $(BINDIR)/kind
+KUBECTL := $(BINDIR)/kubectl
 KUSTOMIZE := ../bin/kustomize
 GINKGO := ../bin/ginkgo
 
 ifeq ($(TEST_KUBERNETES_TARGET),current)
-TEST_KUBERNETES_VERSION=1.18
+TEST_KUBERNETES_VERSION=1.20
 else ifeq ($(TEST_KUBERNETES_TARGET),prev)
-TEST_KUBERNETES_VERSION=1.17
+TEST_KUBERNETES_VERSION=1.19
 else ifeq ($(TEST_KUBERNETES_TARGET),prev2)
-TEST_KUBERNETES_VERSION=1.16
-else
-# If you want to change the Kubernetes version for e2e test, specify this variable from command line.
-# e.g. $ make TEST_KUBERNETES_VERSION=1.18 setup test
-TEST_KUBERNETES_VERSION?=1.18
+TEST_KUBERNETES_VERSION=1.18
 endif
 
 export TEST_KUBERNETES_VERSION
 
-ifeq ($(TEST_SCHEDULER_MANIFEST),daemonset)
-SCHEDULER_POLICY=scheduler-policy-daemonset.cfg
-KUSTOMIZE_DIR=manifests/overlays/daemonset-scheduler
-else ifeq ($(TEST_SCHEDULER_MANIFEST),deployment)
+SCHEDULER_POLICY := scheduler-policy-daemonset.cfg
+KUSTOMIZE_DIR := manifests/overlays/daemonset-scheduler
+ifeq ($(TEST_SCHEDULER_MANIFEST),deployment)
 SCHEDULER_POLICY=scheduler-policy-deployment.cfg
 KUSTOMIZE_DIR=manifests/overlays/deployment-scheduler
-else
-SCHEDULER_POLICY?=scheduler-policy-daemonset.cfg
-KUSTOMIZE_DIR?=manifests/overlays/daemonset-scheduler
 endif
 
-ifeq ($(TEST_KUBERNETES_VERSION),1.18)
+ifeq ($(TEST_KUBERNETES_VERSION),1.20)
+KUBERNETES_VERSION=1.20.2
+KUBEADM_APIVERSION=kubeadm.k8s.io/v1beta2
+SCHEDULER_CONFIG=scheduler-config-v1beta1-$(TEST_SCHEDULER_MANIFEST).yaml
+else ifeq ($(TEST_KUBERNETES_VERSION),1.19)
+KUBERNETES_VERSION=1.19.4
+KUBEADM_APIVERSION=kubeadm.k8s.io/v1beta2
+SCHEDULER_CONFIG=scheduler-config-v1beta1-$(TEST_SCHEDULER_MANIFEST).yaml
+else ifeq ($(TEST_KUBERNETES_VERSION),1.18)
 KUBERNETES_VERSION=1.18.8
 KUBEADM_APIVERSION=kubeadm.k8s.io/v1beta2
-else ifeq ($(TEST_KUBERNETES_VERSION),1.17)
-KUBERNETES_VERSION=1.17.11
-KUBEADM_APIVERSION=kubeadm.k8s.io/v1beta2
-else ifeq ($(TEST_KUBERNETES_VERSION),1.16)
-KUBERNETES_VERSION=1.16.15
-KUBEADM_APIVERSION=kubeadm.k8s.io/v1beta2
+SCHEDULER_CONFIG=scheduler-config-v1alpha1.yaml
 endif
 
-GO_FILES := $(shell find .. -path ../vendor -prune -o -path ../e2e -prune -o -name '*.go' -print)
+GO_FILES := $(shell find .. -prune -o -path ../e2e -prune -o -name '*.go' -print)
 SERVER_CERT_FILES=./certs/cert.pem ./certs/key.pem
 BACKING_STORE=./build
 
@@ -54,13 +55,15 @@ topolvm.img: $(GO_FILES)
 	ln -s hypertopolvm ./tmpbin/topolvm-scheduler
 	ln -s hypertopolvm ./tmpbin/topolvm-node
 	ln -s hypertopolvm ./tmpbin/topolvm-controller
+	$(MAKE) -f ../csi-sidecars.mk OUTPUT_DIR=tmpbin
 	docker build --no-cache --rm=false -f Dockerfile -t topolvm:dev tmpbin
 	docker save -o $@ topolvm:dev
 
-/tmp/topolvm/scheduler/scheduler-config.yaml: scheduler-config.yaml
+/tmp/topolvm/scheduler/scheduler-config.yaml: $(SCHEDULER_CONFIG)
 	mkdir -p /tmp/topolvm/scheduler
 	cp $< $@
 
+# The policy file will be copied in all kubernetes version, but it isn't used in kubernetes v1.19 or later.
 /tmp/topolvm/scheduler/scheduler-policy.cfg: $(SCHEDULER_POLICY)
 	mkdir -p /tmp/topolvm/scheduler
 	cp $< $@
@@ -132,7 +135,7 @@ test: topolvm.img $(SERVER_CERT_FILES)
 	$(MAKE) launch-kind
 	$(KIND) load image-archive --name=$(KIND_CLUSTER_NAME) topolvm.img
 	$(KUSTOMIZE) build --load_restrictor='none' $(KUSTOMIZE_DIR) | $(KUBECTL) apply -f -
-	$(SUDO) -E env PATH=${PATH} E2ETEST=1 $(GINKGO) --failFast -v .
+	$(SUDO) -E env PATH=${PATH} E2ETEST=1 BINDIR=$(BINDIR) $(GINKGO) --failFast -v .
 
 $(SERVER_CERT_FILES):
 	mkdir -p certs
@@ -143,5 +146,9 @@ clean: stop-lvmd
 
 setup:
 	cd ..; $(MAKE) setup
+	mkdir -p $(BINDIR)
+	curl -o $(BINDIR)/kind -sfL https://kind.sigs.k8s.io/dl/v$(KIND_VERSION)/kind-linux-amd64
+	curl -o $(BINDIR)/kubectl -sfL https://storage.googleapis.com/kubernetes-release/release/v$(KUBERNETES_VERSION)/bin/linux/amd64/kubectl
+	chmod a+x $(BINDIR)/kubectl $(BINDIR)/kind
 
 .PHONY: launch-kind shutdown-kind start-lvmd stop-lvmd test clean setup
