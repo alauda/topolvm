@@ -19,7 +19,7 @@ AlaudaPipeline {
             repository: "acp/topolvm",
             credentials: "alaudak8s",
             context: ".",
-            dockerfile: "Dockerfile",
+            dockerfile: "Dockerfile.with-sidecar",
             armBuild: false,
         ],
         sonar: [
