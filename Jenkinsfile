@@ -40,15 +40,7 @@ AlaudaPipeline {
         GO111MODULE: "on",
     ]
     steps = [
-        [
-            name: "Build",
-            container: language,
-            groovy: [
-                """
-                   sh script: "make build"
-                """
-            ]
-        ],
+
     ]
 
 }
