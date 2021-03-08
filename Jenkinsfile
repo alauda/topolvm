@@ -2,7 +2,7 @@ library "alauda-cicd"
 def language = "golang"
 AlaudaPipeline {
     config = [
-        agent: 'golang-1.15',
+        agent: 'golang-1.13',
         folder: '.',
         scm: [
             credentials: 'acp-acp-gitlab'
