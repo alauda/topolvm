@@ -44,15 +44,17 @@ Bump version
     $ export VERSION
     ```
 
-2. Checkout `master` branch.
+2. Checkout `main` branch.
 3. Make a branch to release, for example by `git neco dev bump-$VERSION`
 4. Update image versions in files below:
    - deploy/manifests/overlays/deployment-scheduler/kustomization.yaml
-   - deploy/manifests/overlays/daemonset-scheduler/kustomization.yaml 
-   - docs/rancher.md.
+   - deploy/manifests/overlays/daemonset-scheduler/kustomization.yaml
+   - example/Makefile
+   - example/README.md
     ```console
     $ sed -r -i "s/newTag: [[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+/newTag: ${VERSION}/g" deploy/manifests/overlays/deployment-scheduler/kustomization.yaml deploy/manifests/overlays/daemonset-scheduler/kustomization.yaml
-    $ sed -r -i "s/TOPOLVM_VERSION=[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+/TOPOLVM_VERSION=${VERSION}/g" docs/rancher.md
+    $ sed -r -i "s/TOPOLVM_VERSION=[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+/TOPOLVM_VERSION=${VERSION}/g" example/Makefile
+    $ sed -r -i "s/checkout v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+/checkout v${VERSION}/g" example/README.md
     ```
 5. Edit `CHANGELOG.md` for the new version ([example][]).
 6. Commit the change and create a pull request:
@@ -66,7 +68,7 @@ Bump version
 8. Add a new tag and push it as follows:
 
     ```console
-    $ git checkout master
+    $ git checkout main
     $ git pull
     $ git tag v$VERSION
     $ git push origin v$VERSION

@@ -14,14 +14,16 @@ The team presented the motivation and implementation of TopoLVM at KubeCon Europ
 Join our community on Slack: [Invitation form](https://docs.google.com/forms/d/e/1FAIpQLSd2zZhqZUDTs8YUfhvKmSI_xb_iiPnz3-Hy6S7ehmHHmiifEg/viewform?embedded=true)
 
 - **Project Status**: Testing for production
-- **Conformed CSI version**: [1.1.0](https://github.com/container-storage-interface/spec/blob/v1.1.0/spec.md)
+- **Conformed CSI version**: [1.3.0](https://github.com/container-storage-interface/spec/blob/v1.3.0/spec.md)
 
 Supported environments
 ----------------------
 
-- Kubernetes: 1.18, 1.17, 1.16
-- Node OS: Linux with LVM2
-- Filesystems: ext4, xfs, btrfs
+- Kubernetes: 1.20, 1.19, 1.18
+- Node OS: Linux with LVM2 (*1)
+- Filesystems: ext4, xfs
+
+*1 The host's Linux Kernel must be v4.9 or later which supports `rmapbt` and `reflink`, if you use xfs filesystem with an official docker image.
 
 Features
 --------
@@ -51,7 +53,7 @@ This repository contains these programs:
 - `lvmd`: gRPC service to manage LVM volumes.
 
 `lvmd` is a standalone program that should be run on Node OS as a systemd service.
-Other programs are packaged into [a container image](https://quay.io/repository/cybozu/topolvm).
+Other programs are packaged into [a container image](https://quay.io/organization/topolvm).
 
 Getting started
 ---------------
@@ -61,7 +63,8 @@ A demonstration of TopoLVM running on [kind (Kubernetes IN Docker)][kind] is ava
 For production deployments, see [deploy](deploy/) directory.
 
 User manual is at [docs/user-manual.md](docs/user-manual.md).
-If you want to use TopoLVM on [Rancher/RKE](https://rancher.com/docs/rke/latest/en/), see [docs/rancher.md](docs/rancher.md).
+
+_Deprecated: If you want to use TopoLVM on [Rancher/RKE](https://rancher.com/docs/rke/latest/en/), see [docs/deprecated/rancher.md](docs/deprecated/rancher.md)._
 
 Documentation
 -------------
@@ -71,7 +74,7 @@ Documentation
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/topolvm)
+Docker images are available on [Quay.io](https://quay.io/organization/topolvm)
 
 [releases]: https://github.com/topolvm/topolvm/releases
 [CSI]: https://github.com/container-storage-interface/spec

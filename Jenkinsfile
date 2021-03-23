@@ -2,7 +2,7 @@ library "alauda-cicd"
 def language = "golang"
 AlaudaPipeline {
     config = [
-        agent: 'golang-high',
+        agent: 'golang-1.13',
         folder: '.',
         scm: [
             credentials: 'acp-acp-gitlab'
@@ -19,8 +19,8 @@ AlaudaPipeline {
             repository: "acp/topolvm",
             credentials: "alaudak8s",
             context: ".",
-            dockerfile: "Dockerfile",
-            armBuild: true,
+            dockerfile: "Dockerfile.with-sidecar",
+            armBuild: false,
         ],
         sonar: [
             binding: "sonarqube"
@@ -40,15 +40,7 @@ AlaudaPipeline {
         GO111MODULE: "on",
     ]
     steps = [
-        [
-            name: "Build",
-            container: language,
-            groovy: [
-                """
-                   sh script: "make build"
-                """
-            ]
-        ],
+
     ]
 
 }

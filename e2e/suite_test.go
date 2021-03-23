@@ -9,11 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kubernetes-csi/csi-test/pkg/sanity"
+	"github.com/kubernetes-csi/csi-test/v4/pkg/sanity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 )
+
+var binDir string
 
 func TestMtest(t *testing.T) {
 	if os.Getenv("E2ETEST") == "" {
@@ -67,6 +69,11 @@ func waitKindnet() error {
 }
 
 var _ = BeforeSuite(func() {
+	By("Getting the directory path which contains some binaries")
+	binDir = os.Getenv("BINDIR")
+	Expect(binDir).ShouldNot(BeEmpty())
+	fmt.Println("This test uses the binaries under " + binDir)
+
 	By("Waiting for mutating webhook to get ready")
 	// Because kindnet will crash. we need to confirm its readiness twice.
 	Eventually(waitKindnet).Should(Succeed())
@@ -83,7 +90,7 @@ metadata:
 spec:
   containers:
     - name: ubuntu
-      image: quay.io/cybozu/ubuntu:18.04
+      image: quay.io/cybozu/ubuntu:20.04
       command: ["/usr/local/bin/pause"]
 `
 	Eventually(func() error {
@@ -127,13 +134,13 @@ var _ = Describe("TopoLVM", func() {
 			}).Should(Succeed())
 		})
 
-		sanity.GinkgoTest(&sanity.Config{
-			Address:           "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/node/csi-topolvm.sock",
-			ControllerAddress: "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/controller/csi-topolvm.sock",
-			TargetPath:        "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/node/mountdir",
-			StagingPath:       "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/node/stagingdir",
-			TestVolumeSize:    1073741824,
-			IDGen:             &sanity.DefaultIDGenerator{},
-		})
+		tc := sanity.NewTestConfig()
+		tc.Address = "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/node/csi-topolvm.sock"
+		tc.ControllerAddress = "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/controller/csi-topolvm.sock"
+		tc.TargetPath = "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/node/mountdir"
+		tc.StagingPath = "/tmp/topolvm/worker1/plugins/topolvm.cybozu.com/node/stagingdir"
+		tc.TestVolumeSize = 1073741824
+		tc.IDGen = &sanity.DefaultIDGenerator{}
+		sanity.GinkgoTest(&tc)
 	})
 })

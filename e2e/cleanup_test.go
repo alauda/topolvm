@@ -72,7 +72,7 @@ spec:
     spec:
       containers:
         - name: ubuntu
-          image: quay.io/cybozu/ubuntu:18.04
+          image: quay.io/cybozu/ubuntu:20.04
           command: ["/usr/local/bin/pause"]
           volumeMounts:
           - mountPath: /test1
@@ -257,9 +257,7 @@ spec:
 		Expect(recreatedPVC.ObjectMeta.UID).ShouldNot(Equal(targetPVC.ObjectMeta.UID))
 	})
 
-	It("should clean up stale LogicalVolume", func() {
-		// The deletion timestamp of logicalvolume is checked and cleaned up periodically by topolvm-controller.
-		// Thus logicalvolume resources connected to the deleted node should be cleaned up after all.
+	It("should clean up LogicalVolume resources connected to the deleted node", func() {
 		By("confirming logicalvolumes are deleted")
 		Eventually(func() error {
 			for _, lv := range targetLVs {
@@ -275,5 +273,50 @@ spec:
 	It("should delete namespace", func() {
 		stdout, stderr, err := kubectl("delete", "ns", cleanupTest)
 		Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+	})
+
+	It("should stop undeleted container in case that the container is undeleted", func() {
+		stdout, stderr, err := execAtLocal(
+			"docker", nil, "exec", "topolvm-e2e-worker3",
+			"systemctl", "stop", "kubelet.service",
+		)
+		Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+
+		stdout, stderr, err = execAtLocal(
+			"docker", nil, "exec", "topolvm-e2e-worker3",
+			"/usr/local/bin/crictl", "ps", "-o=json",
+		)
+		Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+
+		type containerList struct {
+			Containers []struct {
+				ID       string `json:"id"`
+				Metadata struct {
+					Name string `json:"name"`
+				}
+			} `json:"containers"`
+		}
+		var l containerList
+		err = json.Unmarshal(stdout, &l)
+		Expect(err).ShouldNot(HaveOccurred(), "stdout=%s", stdout)
+
+		for _, c := range l.Containers {
+			stdout, stderr, err = execAtLocal(
+				"docker", nil,
+				"exec", "topolvm-e2e-worker3", "/usr/local/bin/crictl", "stop", c.ID,
+			)
+			Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+			fmt.Printf("stop ubuntu container with id=%s\n", c.ID)
+		}
+	})
+
+	It("should cleanup volumes", func() {
+		for _, lv := range targetLVs {
+			stdout, stderr, err := execAtLocal("sudo", nil, "umount", "/dev/topolvm/"+lv.Status.VolumeID)
+			Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+
+			stdout, stderr, err = execAtLocal("sudo", nil, "lvremove", "-y", "--select", "lv_name="+lv.Status.VolumeID)
+			Expect(err).ShouldNot(HaveOccurred(), "stdout=%s, stderr=%s", stdout, stderr)
+		}
 	})
 }
