@@ -62,21 +62,11 @@ func subMain() error {
 	dialFunc := func(ctx context.Context, a string) (net.Conn, error) {
 		return dialer.DialContext(ctx, "unix", a)
 	}
-
-	var conn *grpc.ClientConn
-	for i := 0; i < 10; i++ {
-		conn, err = grpc.Dial(config.lvmdSocket, grpc.WithInsecure(), grpc.WithContextDialer(dialFunc))
-		if err != nil {
-			setupLog.Error(err, "can not dial lvmd socket")
-		} else {
-			break
-		}
-		time.Sleep(time.Second * 1)
-	}
-	defer conn.Close()
+	conn, err := grpc.Dial(config.lvmdSocket, grpc.WithInsecure(), grpc.WithContextDialer(dialFunc))
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	lvcontroller := controllers.NewLogicalVolumeReconciler(
 		mgr.GetClient(),
