@@ -16,7 +16,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	topolvmcybozucomv1 "github.com/topolvm/topolvm/api/v1"
+	topolvmv1 "github.com/topolvm/topolvm/api/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -48,7 +48,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = topolvmcybozucomv1.AddToScheme(scheme.Scheme)
+	err = topolvmv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = corev1.AddToScheme(scheme.Scheme)

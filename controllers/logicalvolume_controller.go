@@ -8,7 +8,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	topolvmcybozucomv1 "github.com/topolvm/topolvm/api/v1"
+	topolvmv1 "github.com/topolvm/topolvm/api/v1"
 )
 
 // LogicalVolumeReconciler reconciles a LogicalVolume object
@@ -18,9 +18,9 @@ type LogicalVolumeReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=topolvm.cybozu.com.cybozu.com,resources=logicalvolumes,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=topolvm.cybozu.com.cybozu.com,resources=logicalvolumes/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=topolvm.cybozu.com.cybozu.com,resources=logicalvolumes/finalizers,verbs=update
+//+kubebuilder:rbac:groups=topolvm.cybozu.com,resources=logicalvolumes,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=topolvm.cybozu.com,resources=logicalvolumes/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=topolvm.cybozu.com,resources=logicalvolumes/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -42,6 +42,6 @@ func (r *LogicalVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *LogicalVolumeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&topolvmcybozucomv1.LogicalVolume{}).
+		For(&topolvmv1.LogicalVolume{}).
 		Complete(r)
 }
