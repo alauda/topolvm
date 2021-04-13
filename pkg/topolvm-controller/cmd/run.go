@@ -12,7 +12,6 @@ import (
 	"github.com/topolvm/topolvm/csi"
 	"github.com/topolvm/topolvm/driver"
 	"github.com/topolvm/topolvm/driver/k8s"
-	"github.com/topolvm/topolvm/hook"
 	"github.com/topolvm/topolvm/runners"
 	"google.golang.org/grpc"
 	storagev1 "k8s.io/api/storage/v1"
@@ -22,7 +21,6 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -70,10 +68,10 @@ func subMain() error {
 
 	// register webhook handlers
 	// admissoin.NewDecoder never returns non-nil error
-	dec, _ := admission.NewDecoder(scheme)
-	wh := mgr.GetWebhookServer()
-	wh.Register("/pod/mutate", hook.PodMutator(mgr.GetClient(), dec))
-	wh.Register("/pvc/mutate", hook.PVCMutator(mgr.GetClient(), dec))
+	//dec, _ := admission.NewDecoder(scheme)
+	//wh := mgr.GetWebhookServer()
+	//wh.Register("/pod/mutate", hook.PodMutator(mgr.GetClient(), dec))
+	//wh.Register("/pvc/mutate", hook.PVCMutator(mgr.GetClient(), dec))
 
 	// register controllers
 	nodecontroller := &controllers.NodeReconciler{
