@@ -20,7 +20,7 @@ AlaudaPipeline {
             credentials: "alaudak8s",
             context: ".",
             dockerfile: "Dockerfile.with-sidecar",
-            armBuild: false,
+            armBuild: true,
         ],
         sonar: [
             binding: "sonarqube"
