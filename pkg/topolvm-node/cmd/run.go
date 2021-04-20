@@ -62,7 +62,7 @@ func subMain() error {
 	dialFunc := func(ctx context.Context, a string) (net.Conn, error) {
 		return dialer.DialContext(ctx, "unix", a)
 	}
-	conn, err := grpc.Dial(config.lvmdSocket, grpc.WithInsecure(), grpc.WithContextDialer(dialFunc))
+	conn, err := grpc.Dial(config.lvmdSocket, grpc.WithInsecure(), grpc.WithContextDialer(dialFunc), grpc.WithBlock())
 	if err != nil {
 		return err
 	}

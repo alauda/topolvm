@@ -2,7 +2,7 @@
 KUBERNETES_VERSION=1.20.2
 KUSTOMIZE_VERSION= 3.8.9
 KIND_VERSION=0.10.0
-TOPOLVM_VERSION=0.8.0
+TOPOLVM_VERSION=0.8.1
 
 KIND_CLUSTER_NAME=topolvm-example
 
@@ -39,7 +39,7 @@ run: $(SERVER_CERT_FILES)
 	$(KUBECTL) apply -f podpvc.yaml
 
 setup: $(KUBECTL)
-	cd /tmp; env GO111MODULE=on go get sigs.k8s.io/kind@v$(KIND_VERSION)
+	go install sigs.k8s.io/kind@v$(KIND_VERSION)
 	$(SUDO) apt-get update
 	$(SUDO) apt-get install -y lvm2 xfsprogs
 	mkdir -p $(BINDIR)
