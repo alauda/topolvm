@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // LVServiceClient is the client API for LVService service.
@@ -23,6 +24,12 @@ type LVServiceClient interface {
 	RemoveLV(ctx context.Context, in *RemoveLVRequest, opts ...grpc.CallOption) (*Empty, error)
 	// Resize a logical volume.
 	ResizeLV(ctx context.Context, in *ResizeLVRequest, opts ...grpc.CallOption) (*Empty, error)
+	// Create a snapshot volume.
+	CreateSnap(ctx context.Context, in *CreateSnapRequest, opts ...grpc.CallOption) (*CreateSnapResponse, error)
+	// Remove a snapshot volume.
+	RemoveSnap(ctx context.Context, in *RemoveSnapRequest, opts ...grpc.CallOption) (*Empty, error)
+	// Restore a volume.
+	RestoreLV(ctx context.Context, in *RestoreLVRequest, opts ...grpc.CallOption) (*RestoreLVResponse, error)
 }
 
 type lVServiceClient struct {
@@ -60,6 +67,33 @@ func (c *lVServiceClient) ResizeLV(ctx context.Context, in *ResizeLVRequest, opt
 	return out, nil
 }
 
+func (c *lVServiceClient) CreateSnap(ctx context.Context, in *CreateSnapRequest, opts ...grpc.CallOption) (*CreateSnapResponse, error) {
+	out := new(CreateSnapResponse)
+	err := c.cc.Invoke(ctx, "/proto.LVService/CreateSnap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lVServiceClient) RemoveSnap(ctx context.Context, in *RemoveSnapRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/proto.LVService/RemoveSnap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lVServiceClient) RestoreLV(ctx context.Context, in *RestoreLVRequest, opts ...grpc.CallOption) (*RestoreLVResponse, error) {
+	out := new(RestoreLVResponse)
+	err := c.cc.Invoke(ctx, "/proto.LVService/RestoreLV", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LVServiceServer is the server API for LVService service.
 // All implementations must embed UnimplementedLVServiceServer
 // for forward compatibility
@@ -70,6 +104,12 @@ type LVServiceServer interface {
 	RemoveLV(context.Context, *RemoveLVRequest) (*Empty, error)
 	// Resize a logical volume.
 	ResizeLV(context.Context, *ResizeLVRequest) (*Empty, error)
+	// Create a snapshot volume.
+	CreateSnap(context.Context, *CreateSnapRequest) (*CreateSnapResponse, error)
+	// Remove a snapshot volume.
+	RemoveSnap(context.Context, *RemoveSnapRequest) (*Empty, error)
+	// Restore a volume.
+	RestoreLV(context.Context, *RestoreLVRequest) (*RestoreLVResponse, error)
 	mustEmbedUnimplementedLVServiceServer()
 }
 
@@ -86,6 +126,15 @@ func (UnimplementedLVServiceServer) RemoveLV(context.Context, *RemoveLVRequest) 
 func (UnimplementedLVServiceServer) ResizeLV(context.Context, *ResizeLVRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResizeLV not implemented")
 }
+func (UnimplementedLVServiceServer) CreateSnap(context.Context, *CreateSnapRequest) (*CreateSnapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSnap not implemented")
+}
+func (UnimplementedLVServiceServer) RemoveSnap(context.Context, *RemoveSnapRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveSnap not implemented")
+}
+func (UnimplementedLVServiceServer) RestoreLV(context.Context, *RestoreLVRequest) (*RestoreLVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RestoreLV not implemented")
+}
 func (UnimplementedLVServiceServer) mustEmbedUnimplementedLVServiceServer() {}
 
 // UnsafeLVServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -95,8 +144,8 @@ type UnsafeLVServiceServer interface {
 	mustEmbedUnimplementedLVServiceServer()
 }
 
-func RegisterLVServiceServer(s *grpc.Server, srv LVServiceServer) {
-	s.RegisterService(&_LVService_serviceDesc, srv)
+func RegisterLVServiceServer(s grpc.ServiceRegistrar, srv LVServiceServer) {
+	s.RegisterService(&LVService_ServiceDesc, srv)
 }
 
 func _LVService_CreateLV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -153,7 +202,64 @@ func _LVService_ResizeLV_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-var _LVService_serviceDesc = grpc.ServiceDesc{
+func _LVService_CreateSnap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSnapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LVServiceServer).CreateSnap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.LVService/CreateSnap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LVServiceServer).CreateSnap(ctx, req.(*CreateSnapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LVService_RemoveSnap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveSnapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LVServiceServer).RemoveSnap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.LVService/RemoveSnap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LVServiceServer).RemoveSnap(ctx, req.(*RemoveSnapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LVService_RestoreLV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RestoreLVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LVServiceServer).RestoreLV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.LVService/RestoreLV",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LVServiceServer).RestoreLV(ctx, req.(*RestoreLVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// LVService_ServiceDesc is the grpc.ServiceDesc for LVService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var LVService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.LVService",
 	HandlerType: (*LVServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -168,6 +274,18 @@ var _LVService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ResizeLV",
 			Handler:    _LVService_ResizeLV_Handler,
+		},
+		{
+			MethodName: "CreateSnap",
+			Handler:    _LVService_CreateSnap_Handler,
+		},
+		{
+			MethodName: "RemoveSnap",
+			Handler:    _LVService_RemoveSnap_Handler,
+		},
+		{
+			MethodName: "RestoreLV",
+			Handler:    _LVService_RestoreLV_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -213,7 +331,7 @@ func (c *vGServiceClient) GetFreeBytes(ctx context.Context, in *GetFreeBytesRequ
 }
 
 func (c *vGServiceClient) Watch(ctx context.Context, in *Empty, opts ...grpc.CallOption) (VGService_WatchClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_VGService_serviceDesc.Streams[0], "/proto.VGService/Watch", opts...)
+	stream, err := c.cc.NewStream(ctx, &VGService_ServiceDesc.Streams[0], "/proto.VGService/Watch", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -279,8 +397,8 @@ type UnsafeVGServiceServer interface {
 	mustEmbedUnimplementedVGServiceServer()
 }
 
-func RegisterVGServiceServer(s *grpc.Server, srv VGServiceServer) {
-	s.RegisterService(&_VGService_serviceDesc, srv)
+func RegisterVGServiceServer(s grpc.ServiceRegistrar, srv VGServiceServer) {
+	s.RegisterService(&VGService_ServiceDesc, srv)
 }
 
 func _VGService_GetLVList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -340,7 +458,10 @@ func (x *vGServiceWatchServer) Send(m *WatchResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-var _VGService_serviceDesc = grpc.ServiceDesc{
+// VGService_ServiceDesc is the grpc.ServiceDesc for VGService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var VGService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.VGService",
 	HandlerType: (*VGServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
