@@ -17,7 +17,7 @@ STATICCHECK := $(BINDIR)/staticcheck
 NILERR := $(BINDIR)/nilerr
 INEFFASSIGN := $(BINDIR)/ineffassign
 KUBEBUILDER_ASSETS := $(BINDIR)
-PROTOC := PATH=$(BINDIR):$(PATH) $(BINDIR)/protoc -I=$(PWD)/include:.
+PROTOC := PATH=$(BINDIR):$(PATH) protoc -I=$(PWD)/include:.
 PACKAGES := unzip lvm2 xfsprogs
 
 GO_FILES=$(shell find -name '*.go' -not -name '*_test.go')
