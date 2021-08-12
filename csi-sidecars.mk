@@ -32,7 +32,7 @@ build: $(CSI_SIDECARS)
 external-provisioner:
 	rm -rf $(EXTERNAL_PROVISIONER_SRC)
 	mkdir -p $(EXTERNAL_PROVISIONER_SRC)
-	curl -sSLf https://github.com/kubernetes-csi/external-provisioner/archive/v$(EXTERNAL_PROVISIONER_VERSION).tar.gz | \
+	curl -sSLf https://github.91chifun.workers.dev/https://github.com/kubernetes-csi/external-provisioner/archive/v$(EXTERNAL_PROVISIONER_VERSION).tar.gz | \
         tar zxf - --strip-components 1 -C $(EXTERNAL_PROVISIONER_SRC)
 	make -C $(EXTERNAL_PROVISIONER_SRC)
 	cp -f $(EXTERNAL_PROVISIONER_SRC)/bin/csi-provisioner $(OUTPUT_DIR)/
@@ -40,7 +40,7 @@ external-provisioner:
 external-attacher:
 	rm -rf $(EXTERNAL_ATTACHER_SRC)
 	mkdir -p $(EXTERNAL_ATTACHER_SRC)
-	curl -sSLf https://github.com/kubernetes-csi/external-attacher/archive/v$(EXTERNAL_ATTACHER_VERSION).tar.gz | \
+	curl -sSLf https://github.91chifun.workers.dev/https://github.com/kubernetes-csi/external-attacher/archive/v$(EXTERNAL_ATTACHER_VERSION).tar.gz | \
         tar zxf - --strip-components 1 -C $(EXTERNAL_ATTACHER_SRC)
 	make -C $(EXTERNAL_ATTACHER_SRC)
 	cp -f $(EXTERNAL_ATTACHER_SRC)/bin/csi-attacher $(OUTPUT_DIR)/
@@ -48,7 +48,7 @@ external-attacher:
 external-resizer:
 	rm -rf $(EXTERNAL_RESIZER_SRC)
 	mkdir -p $(EXTERNAL_RESIZER_SRC)
-	curl -sSLf https://github.com/kubernetes-csi/external-resizer/archive/v$(EXTERNAL_RESIZER_VERSION).tar.gz | \
+	curl -sSLf https://github.91chifun.workers.dev/https://github.com/kubernetes-csi/external-resizer/archive/v$(EXTERNAL_RESIZER_VERSION).tar.gz | \
         tar zxf - --strip-components 1 -C $(EXTERNAL_RESIZER_SRC)
 	make -C $(EXTERNAL_RESIZER_SRC)
 	cp -f $(EXTERNAL_RESIZER_SRC)/bin/csi-resizer $(OUTPUT_DIR)/
@@ -56,7 +56,7 @@ external-resizer:
 external-snapshotter:
 	rm -rf $(EXTERNAL_SNAPSHOTTER_SRC)
 	mkdir -p $(EXTERNAL_SNAPSHOTTER_SRC)
-	curl -sSLf https://github.com/kubernetes-csi/external-snapshotter/archive/v$(EXTERNAL_SNAPSHOTTER_VERSION).tar.gz | \
+	curl -sSLf https://github.91chifun.workers.dev/https://github.com/kubernetes-csi/external-snapshotter/archive/v$(EXTERNAL_SNAPSHOTTER_VERSION).tar.gz | \
         tar zxf - --strip-components 1 -C $(EXTERNAL_SNAPSHOTTER_SRC)
 	make -C $(EXTERNAL_SNAPSHOTTER_SRC)
 	cp -f $(EXTERNAL_SNAPSHOTTER_SRC)/bin/csi-snapshotter $(OUTPUT_DIR)/
@@ -64,7 +64,7 @@ external-snapshotter:
 node-driver-registrar:
 	rm -rf $(NODE_DRIVER_REGISTRAR_SRC)
 	mkdir -p $(NODE_DRIVER_REGISTRAR_SRC)
-	curl -sSLf https://github.com/kubernetes-csi/node-driver-registrar/archive/v$(NODE_DRIVER_REGISTRAR_VERSION).tar.gz | \
+	curl -sSLf https://github.91chifun.workers.dev/https://github.com/kubernetes-csi/node-driver-registrar/archive/v$(NODE_DRIVER_REGISTRAR_VERSION).tar.gz | \
         tar zxf - --strip-components 1 -C $(NODE_DRIVER_REGISTRAR_SRC)
 	make -C $(NODE_DRIVER_REGISTRAR_SRC)
 	cp -f $(NODE_DRIVER_REGISTRAR_SRC)/bin/csi-node-driver-registrar $(OUTPUT_DIR)/
@@ -72,7 +72,7 @@ node-driver-registrar:
 livenessprobe:
 	rm -rf $(LIVENESSPROBE_SRC)
 	mkdir -p $(LIVENESSPROBE_SRC)
-	curl -sSLf https://github.com/kubernetes-csi/livenessprobe/archive/v$(LIVENESSPROBE_VERSION).tar.gz | \
+	curl -sSLf https://github.91chifun.workers.dev/https://github.com/kubernetes-csi/livenessprobe/archive/v$(LIVENESSPROBE_VERSION).tar.gz | \
         tar zxf - --strip-components 1 -C $(LIVENESSPROBE_SRC)
 	make -C $(LIVENESSPROBE_SRC)
 	cp -f $(LIVENESSPROBE_SRC)/bin/livenessprobe $(OUTPUT_DIR)/
