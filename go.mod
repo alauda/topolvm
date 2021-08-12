@@ -2,7 +2,10 @@ module github.com/topolvm/topolvm
 
 go 1.15
 
-replace launchpad.net/gocheck => github.com/go-check/check v0.0.0-20180628173108-788fd7840127
+replace (
+	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+	launchpad.net/gocheck => github.com/go-check/check v0.0.0-20180628173108-788fd7840127
+)
 
 require (
 	cloud.google.com/go v0.76.0 // indirect
