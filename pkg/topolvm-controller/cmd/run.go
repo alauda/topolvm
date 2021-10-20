@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	snapshotscheme "github.com/kubernetes-csi/external-snapshotter/v2/pkg/client/clientset/versioned/scheme"
 	"github.com/topolvm/topolvm"
 	topolvmv1 "github.com/topolvm/topolvm/api/v1"
 	"github.com/topolvm/topolvm/controllers"
@@ -19,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
@@ -32,6 +34,7 @@ var (
 func init() {
 	utilruntime.Must(topolvmv1.AddToScheme(scheme))
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(snapshotscheme.AddToScheme(scheme))
 
 	// +kubebuilder:scaffold:scheme
 }
@@ -54,13 +57,14 @@ func subMain() error {
 		return fmt.Errorf("invalid webhook port: %v", err)
 	}
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: config.metricsAddr,
-		LeaderElection:     true,
-		LeaderElectionID:   config.leaderElectionID,
-		Host:               hookHost,
-		Port:               hookPort,
-		CertDir:            config.certDir,
+		Scheme:                     scheme,
+		MetricsBindAddress:         config.metricsAddr,
+		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
+		LeaderElection:             true,
+		LeaderElectionID:           config.leaderElectionID,
+		Host:                       hookHost,
+		Port:                       hookPort,
+		CertDir:                    config.certDir,
 	})
 	if err != nil {
 		return err
