@@ -50,3 +50,8 @@ const DefaultSizeGb = 1
 
 // DefaultSize is DefaultSizeGb in bytes
 const DefaultSize = DefaultSizeGb << 30
+
+const LVSnapshotSourceVol = "topolvm.cybozu.com/snapshot-source-volume"
+const LVParentID = "topolvm.cybozu.com/parent-id"
+const LVVolumeMode = "topolvm.cybozu.com/volume-mode"
+const LVVolumeFsType = "topolvm.cybozu.com/fs-type"
